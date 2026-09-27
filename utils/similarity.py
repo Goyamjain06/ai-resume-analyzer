@@ -1,7 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-import re
 
 def analyze_similarity(resume_text, job_description):
     documents = [resume_text, job_description]
@@ -29,12 +28,3 @@ def analyze_similarity(resume_text, job_description):
         "important_keywords": important_keywords,
         "missing_keywords": missing_keywords
     }
-    import re
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-
-def clean_text(text):
-    text = re.sub(r'\d+', '', text)  # remove numbers
-    text = re.sub(r'[^a-zA-Z\s]', '', text)
-    words = text.lower().split()
-    words = [w for w in words if w not in ENGLISH_STOP_WORDS and len(w) > 3]
-    return " ".join(words)
