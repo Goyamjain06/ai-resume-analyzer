@@ -1,86 +1,160 @@
-# AI Resume Analyzer
+# 🤖 AI Resume Analyzer
 
-A FastAPI service that scores how well a resume matches a job description, combining classic TF-IDF similarity with LLM-based skill-gap analysis.
+> **Instantly see how well your resume matches any job description — powered by TF-IDF similarity + Google Gemini AI.**
 
-## Features
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google%20Gemini-AI-4285F4?logo=google&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-- **PDF resume parsing** — extracts raw text from an uploaded resume using `pdfplumber`
-- **TF-IDF + cosine similarity scoring** — quantifies how closely a resume matches a job description
-- **Keyword extraction** — surfaces the most important terms from the job description
-- **Missing-skill detection** — flags job-description keywords that don't appear in the resume
-- **LLM-powered skill-gap analysis** — uses a local Llama 3 model (via Ollama) to generate a recruiter-style breakdown of missing skills, improvement suggestions, and an overall evaluation
+---
 
-## Tech Stack
+## ✨ Features
 
-- **Python 3** + **FastAPI** — HTTP API and request handling
-- **scikit-learn** — `TfidfVectorizer` and cosine similarity for resume/JD matching
-- **pdfplumber** — PDF text extraction
-- **Ollama** (Llama 3 8B) — local LLM inference for qualitative skill-gap analysis
-- **Uvicorn** — ASGI server
+- 📄 **PDF Resume Upload** — drag & drop or browse
+- 📊 **Match Score** — TF-IDF cosine similarity shows % fit at a glance
+- 🔑 **Keyword Analysis** — top JD keywords highlighted; missing ones flagged in red
+- 🤖 **AI Recruiter Feedback** — Gemini 1.5 Flash gives missing skills, improvement tips, overall evaluation
+- 🌙 **Dark UI** — clean, modern interface recruiters won't forget
+- 📱 **Mobile Responsive** — works on any screen
 
-## Setup
+---
 
-These steps assume a fresh machine with no prior setup.
+## 🖥️ Live Demo
 
-1. **Clone the repository**
-   ```bash
-   git clone <repo-url>
-   cd ai-resume-analyzer
-   ```
+> 🔗 **[your-deployment-url.vercel.app](#)** ← replace after deploy
 
-2. **Create and activate a virtual environment**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate   # on Windows: venv\Scripts\activate
-   ```
+---
 
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+## 🛠️ Tech Stack
 
-4. **Install and start Ollama** (required for the LLM skill-gap analysis)
-   ```bash
-   brew install ollama          # macOS; see ollama.com for other platforms
-   brew services start ollama
-   ollama pull llama3:8b
-   ```
-   The rest of the API (PDF parsing, TF-IDF scoring) works without this step — only the `llm_analysis` field in the response requires Ollama to be running.
+| Layer | Tech |
+|---|---|
+| Backend | Python 3.11, FastAPI, Uvicorn |
+| NLP | scikit-learn (TF-IDF + cosine similarity) |
+| PDF Parsing | pdfplumber |
+| AI / LLM | Google Gemini 1.5 Flash |
+| Frontend | React 18, plain CSS |
+| Deploy | Render (backend) + Vercel (frontend) |
 
-## Running the App
+---
+
+## 🚀 Run Locally
+
+### 1. Clone & set up backend
+
+```bash
+git clone https://github.com/Goyamjain06/ai-resume-analyzer
+cd ai-resume-analyzer
+
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Add your Gemini API key
+
+```bash
+cp .env.example .env
+# Edit .env and add your GEMINI_API_KEY
+# Get a free key at: https://aistudio.google.com/app/apikey
+```
+
+### 3. Start backend
 
 ```bash
 uvicorn main:app --reload
+# API runs at http://localhost:8000
+# Swagger docs at http://localhost:8000/docs
 ```
 
-The API will be available at `http://127.0.0.1:8000`. Interactive Swagger docs are at `http://127.0.0.1:8000/docs`.
-
-### Example request
+### 4. Start frontend
 
 ```bash
-curl -X POST http://127.0.0.1:8000/analyze \
-  -F "resume=@resume.pdf" \
-  -F "job_description=Looking for a Python developer with FastAPI and AWS experience."
+cd frontend
+npm install
+npm start
+# Opens at http://localhost:3000
 ```
 
-### Example response
+---
 
+## 📡 API Reference
+
+### `POST /analyze`
+
+Analyzes a resume against a job description.
+
+**Request** (multipart/form-data)
+| Field | Type | Description |
+|---|---|---|
+| `resume` | File | PDF resume |
+| `job_description` | string | Full job description text |
+
+**Response**
 ```json
 {
-  "similarity_score": 42.7,
-  "important_keywords": ["python", "fastapi", "aws", "developer", "..."],
-  "missing_keywords": ["aws"],
-  "llm_analysis": "- Missing skills: ...\n- Improvement suggestions: ...\n- Overall evaluation: ..."
+  "similarity_score": 72.4,
+  "important_keywords": ["python", "fastapi", "machine learning", ...],
+  "missing_keywords": ["docker", "kubernetes"],
+  "llm_analysis": "**Missing Skills**\n• Docker containerization..."
 }
 ```
 
-## Technical Highlights
+### `GET /health`
+Returns `{"status": "ok"}` — used for uptime monitoring.
 
-- **Single endpoint, dual analysis path**: `/analyze` runs a fast, deterministic TF-IDF comparison alongside a slower, qualitative LLM pass, returning both in one response.
-- **Local-first LLM**: skill-gap analysis runs entirely against a local Ollama model — no external API calls or API keys required.
-- **Graceful degradation**: if Ollama isn't running, the endpoint still returns the TF-IDF results with a clear error message in `llm_analysis` instead of failing the whole request.
-- **Keyword importance via TF-IDF**: important keywords are selected from the job description's own TF-IDF weights, so terms specific to that JD are prioritized over generic English words.
+---
 
-## Screenshots / Demo
+## ☁️ Deploy
 
-_Add a screenshot of the Swagger UI (`/docs`) or a sample request/response here._
+### Backend → Render (free)
+1. Push repo to GitHub
+2. New Web Service on [render.com](https://render.com)
+3. Build command: `pip install -r requirements.txt`
+4. Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Add env var: `GEMINI_API_KEY=your_key`
+
+### Frontend → Vercel (free)
+1. Import `frontend/` folder on [vercel.com](https://vercel.com)
+2. Add env var: `REACT_APP_API_URL=https://your-render-url.onrender.com`
+3. Deploy — done!
+
+---
+
+## 📁 Project Structure
+
+```
+ai-resume-analyzer/
+├── main.py               # FastAPI app + endpoints
+├── utils/
+│   ├── parser.py         # PDF text extraction
+│   ├── similarity.py     # TF-IDF cosine similarity
+│   └── llm.py            # Gemini AI integration
+├── frontend/
+│   ├── src/
+│   │   ├── App.js        # Main React component
+│   │   └── App.css       # Styles
+│   └── package.json
+├── Dockerfile            # Docker config for backend
+├── render.yaml           # Render deployment config
+└── requirements.txt
+```
+
+---
+
+## 🔑 Getting a Free Gemini API Key
+
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Sign in with Google
+3. Click **Create API Key**
+4. Copy and paste in `.env`
+
+The free tier is generous — more than enough for personal use.
+
+---
+
+## 📄 License
+
+MIT © [Goyam Jain](https://github.com/Goyamjain06)

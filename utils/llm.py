@@ -1,41 +1,40 @@
+import os
 import requests
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "llama3:8b"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
-def generate_skill_gap_analysis(resume_text, job_description):
-    prompt = f"""
-You are a senior technical recruiter.
+def generate_skill_gap_analysis(resume_text: str, job_description: str) -> str:
+    if not GEMINI_API_KEY:
+        return "LLM analysis unavailable: GEMINI_API_KEY not set."
 
-Compare this resume with the job description.
+    prompt = f"""You are a senior technical recruiter reviewing a candidate's resume against a job description.
 
-Provide:
-1. Missing skills
-2. Improvement suggestions
-3. Overall evaluation
+Analyze the resume and provide:
+1. **Missing Skills** - Key skills from the JD not found in the resume
+2. **Improvement Suggestions** - Specific, actionable ways to strengthen the resume
+3. **Overall Evaluation** - Brief summary of candidate fit (2-3 sentences)
 
 Resume:
-{resume_text}
+{resume_text[:3000]}
 
 Job Description:
-{job_description}
+{job_description[:2000]}
 
-Respond in clean bullet points.
-"""
+Respond in clean bullet points under each heading. Be specific and constructive."""
 
     try:
         response = requests.post(
-            OLLAMA_URL,
+            f"{GEMINI_URL}?key={GEMINI_API_KEY}",
             json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.3, "maxOutputTokens": 800}
             },
-            timeout=60
+            timeout=30
         )
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        return f"LLM analysis unavailable: could not reach Ollama ({e})"
-
-    return response.json()["response"]
+        data = response.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        return f"LLM analysis unavailable: {str(e)}"
