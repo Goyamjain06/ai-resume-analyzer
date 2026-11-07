@@ -97,14 +97,30 @@ export default function App() {
     form.append('job_description', jd);
 
     try {
-      const res = await fetch(`${API_BASE}/analyze`, { method: 'POST', body: form });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Analysis failed.');
-      }
-      setResult(await res.json());
+      // Wake up Render free instance first
+      await fetch(`${API_BASE}/health`).catch(() => {});
+
+      const res = await fetch(`${API_BASE}/analyze`, {
+        method: 'POST',
+        body: form,
+        signal: AbortSignal.timeout(90000)
+      });
+
+      const text = await res.text();
+      if (!text) throw new Error('Server is waking up — please try again in 10 seconds.');
+
+      let data;
+      try { data = JSON.parse(text); }
+      catch { throw new Error('Server is waking up — please try again in 10 seconds.'); }
+
+      if (!res.ok) throw new Error(data.detail || 'Analysis failed.');
+      setResult(data);
     } catch (e) {
-      setError(e.message);
+      if (e.name === 'TimeoutError') {
+        setError('Request timed out — the server may be waking up. Please try again.');
+      } else {
+        setError(e.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -177,7 +193,7 @@ export default function App() {
           disabled={loading}
         >
           {loading ? (
-            <span className="btn-loading"><span className="spinner" /> Analyzing with AI…</span>
+            <span className="btn-loading"><span className="spinner" /> Analyzing… (may take ~30s on first run)</span>
           ) : (
             '🔍 Analyze Resume'
           )}

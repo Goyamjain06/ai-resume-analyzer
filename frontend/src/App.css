@@ -45,13 +45,14 @@ body {
   margin-bottom: 1.2rem;
 }
 .hero-title {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 800;
-  background: linear-gradient(135deg, #f1f5f9 30%, #818cf8);
+  background: linear-gradient(135deg, #ffffff 20%, #a5b4fc 60%, #818cf8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 1rem;
+  letter-spacing: -0.02em;
 }
 .hero-sub { color: var(--muted); font-size: 1.05rem; max-width: 540px; margin: 0 auto; }
 
@@ -59,9 +60,10 @@ body {
 .main-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 2rem;
+  border-radius: 20px;
+  padding: 2.5rem;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.3);
 }
 
 .section { margin-bottom: 1.5rem; }
@@ -140,18 +142,23 @@ body {
 /* BUTTON */
 .analyze-btn {
   width: 100%;
-  background: var(--accent);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   border: none;
-  padding: 1rem;
+  padding: 1.1rem;
   border-radius: var(--radius);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: all 0.2s;
   letter-spacing: 0.01em;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.4);
 }
-.analyze-btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+.analyze-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(99,102,241,0.5);
+}
 .analyze-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 .btn-loading { display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
 .spinner {
@@ -185,8 +192,9 @@ body {
 .result-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
+  border-radius: 18px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.2);
 }
 .result-card h3 {
   font-size: 0.9rem;
