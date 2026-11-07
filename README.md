@@ -23,7 +23,7 @@
 
 ## 🖥️ Live Demo
 
-> 🔗 **[your-deployment-url.vercel.app](#)** ← replace after deploy
+> 🔗 **[ai-resume-analyzer-bay-one.vercel.app](https://ai-resume-analyzer-bay-one.vercel.app)**
 
 ---
 
