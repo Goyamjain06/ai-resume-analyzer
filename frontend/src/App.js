@@ -74,24 +74,55 @@ export default function App() {
     if (!resume) return setError('Please upload your resume PDF.');
     if (!jd.trim()) return setError('Please paste the job description.');
     setError(''); setLoading(true); setResult(null);
-    const form = new FormData();
-    form.append('resume', resume);
-    form.append('job_description', jd);
-    try {
-      await fetch(`${API_BASE}/health`).catch(() => {});
+
+    // Wake up Render server with retries (free tier sleeps after inactivity)
+    const wakeServer = async (attempts = 8) => {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(12000) });
+          if (r.ok) return true;
+        } catch {}
+        await new Promise(res => setTimeout(res, 4000));
+      }
+      return false;
+    };
+
+    const tryAnalyze = async () => {
+      const form = new FormData();
+      form.append('resume', resume);
+      form.append('job_description', jd);
       const res = await fetch(`${API_BASE}/analyze`, {
         method: 'POST', body: form,
-        signal: AbortSignal.timeout(90000)
+        signal: AbortSignal.timeout(120000)
       });
       const text = await res.text();
-      if (!text) throw new Error('Server is waking up — please try again in 10 seconds.');
-      let data;
-      try { data = JSON.parse(text); } catch { throw new Error('Server is waking up — please try again in 10 seconds.'); }
+      if (!text || text.trim() === '') return null; // server not ready yet
+      const data = JSON.parse(text);
       if (!res.ok) throw new Error(data.detail || 'Analysis failed.');
+      return data;
+    };
+
+    try {
+      // First wake the server
+      await wakeServer();
+
+      // Try analyze with up to 3 retries
+      let data = null;
+      for (let i = 0; i < 3; i++) {
+        try {
+          data = await tryAnalyze();
+          if (data) break;
+        } catch (e) {
+          if (i === 2) throw e;
+        }
+        await new Promise(res => setTimeout(res, 5000));
+      }
+
+      if (!data) throw new Error('Server took too long to respond. Please try once more.');
       setResult(data);
       setTimeout(() => document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' }), 100);
     } catch (e) {
-      setError(e.name === 'TimeoutError' ? 'Request timed out — server waking up. Please retry.' : e.message);
+      setError(e.name === 'TimeoutError' ? 'Server is waking up — please click Analyze again.' : e.message);
     } finally { setLoading(false); }
   };
 
@@ -231,7 +262,7 @@ export default function App() {
 
           <button className={`analyze-btn ${loading ? 'is-loading' : ''}`} onClick={handleAnalyze} disabled={loading}>
             {loading
-              ? <><span className="spin" /> Analyzing… (may take ~30s on first run)</>
+              ? <><span className="spin" /> Waking server & analyzing… please wait (~30-60s)</>
               : '🔍 Analyze My Resume — It\'s Free'}
           </button>
           <p className="analyzer-note">🔒 Your resume is never stored or shared.</p>
